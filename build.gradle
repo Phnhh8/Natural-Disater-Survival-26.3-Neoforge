@@ -10,10 +10,19 @@ base {
     archivesName = mod_id
 }
 
+repositories {
+    maven { url = 'https://maven.neoforged.net/releases' }
+    mavenCentral()
+}
+
+def neoConf = configurations.detachedConfiguration(dependencies.create("net.neoforged:neoforge:[26.3,26.4)"))
+neoConf.transitive = false
+def resolvedNeoVersion = neoConf.resolvedConfiguration.firstLevelModuleDependencies.first().moduleVersion
+
 java.toolchain.languageVersion = JavaLanguageVersion.of(25)
 
 neoForge {
-    version = project.neo_version
+    version = resolvedNeoVersion
     runs {
         client { client() }
         server { server() }
@@ -23,8 +32,4 @@ neoForge {
             sourceSet(sourceSets.main)
         }
     }
-}
-
-repositories {
-    mavenCentral()
 }
