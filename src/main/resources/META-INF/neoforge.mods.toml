@@ -1,0 +1,24 @@
+modLoader="javafml"
+loaderVersion="[4,)"
+license="MIT"
+
+[[mods]]
+modId="naturaldisasters"
+version="1.0.0"
+displayName="Natural Disaster Survival"
+authors="Phnhh8"
+description='''12 Natural Disasters and Creative Tab for Minecraft 26.3 NeoForge'''
+
+[[dependencies.naturaldisasters]]
+    modId="neoforge"
+    type="required"
+    versionRange="[26.3,)"
+    ordering="NONE"
+    side="BOTH"
+
+[[dependencies.naturaldisasters]]
+    modId="minecraft"
+    type="required"
+    versionRange="[26.3,26.4)"
+    ordering="NONE"
+    side="BOTH"
