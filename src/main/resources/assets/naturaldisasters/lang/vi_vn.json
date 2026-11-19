@@ -1,0 +1,16 @@
+{
+  "itemGroup.naturaldisasters": "Thảm Họa Thiên Nhiên",
+  "item.naturaldisasters.meteor_caller": "Triệu Hồi Mưa Thiên Thạch",
+  "item.naturaldisasters.earthquake_caller": "Triệu Hồi Động Đất",
+  "item.naturaldisasters.acid_rain_caller": "Triệu Hồi Mưa Axit",
+  "item.naturaldisasters.tornado_caller": "Triệu Hồi Lốc Xoáy",
+  "item.naturaldisasters.landslide_caller": "Triệu Hồi Sạt Lở Đất",
+  "item.naturaldisasters.nuke_caller": "Triệu Hồi Bom Nguyên Tử",
+  "item.naturaldisasters.tsunami_caller": "Triệu Hồi Sóng Thần",
+  "item.naturaldisasters.volcano_caller": "Triệu Hồi Siêu Núi Lửa",
+  "item.naturaldisasters.sinkhole_caller": "Triệu Hồi Hố Sụt Tử Thần",
+  "item.naturaldisasters.lightning_caller": "Triệu Hồi Bão Sấm Sét",
+  "item.naturaldisasters.blizzard_caller": "Triệu Hồi Bão Tuyết",
+  "item.naturaldisasters.zombie_caller": "Triệu Hồi Tận Thế Zombie",
+  "item.naturaldisasters.disaster_stopper": "Ngừng Thảm Họa"
+}
