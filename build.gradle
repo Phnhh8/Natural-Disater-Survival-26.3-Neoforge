@@ -1,16 +1,16 @@
 plugins {
     id 'java-library'
-    id 'net.neoforged.moddev' version '2.0.74'
+    id 'net.neoforged.moddev' version '2.0.141'
 }
 
 version = '1.0.0'
 group = 'com.example.disasters'
-base.archivesName = 'naturaldisasters-neoforge-1.21.1'
+base.archivesName = 'naturaldisasters-neoforge-1.21.11'
 
 java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 neoForge {
-    version = '21.1.119'
+    version = '21.11.41-beta'
 
     runs {
         client { client() }
@@ -31,6 +31,7 @@ tasks.withType(JavaCompile).configureEach {
 tasks.register('generateAssets') {
     doLast {
         def baseDir = file("$buildDir/generated/resources/assets/naturaldisasters")
+        new File(baseDir, "items").mkdirs()
         new File(baseDir, "models/item").mkdirs()
 
         def icons = [
@@ -42,8 +43,9 @@ tasks.register('generateAssets') {
         ]
         icons.each { id, tex ->
             if (id == "nuke_caller") {
-                new File(baseDir, "models/item/${id}.json").setText("""{"parent":"minecraft:block/tnt"}""", 'UTF-8')
+                new File(baseDir, "items/${id}.json").setText("""{"model":{"type":"minecraft:model","model":"minecraft:block/tnt"}}""", 'UTF-8')
             } else {
+                new File(baseDir, "items/${id}.json").setText("""{"model":{"type":"minecraft:model","model":"naturaldisasters:item/${id}"}}""", 'UTF-8')
                 new File(baseDir, "models/item/${id}.json").setText("""{"parent":"minecraft:item/generated","textures":{"layer0":"minecraft:item/${tex}"}}""", 'UTF-8')
             }
         }
