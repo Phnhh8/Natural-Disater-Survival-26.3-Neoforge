@@ -5,20 +5,19 @@ license="MIT"
 [[mods]]
 modId="naturaldisasters"
 version="1.0.0"
-displayName="Natural Disaster Survival"
-authors="Phnhh8"
-description='''12 Natural Disasters and Creative Tab for Minecraft 26.3 NeoForge'''
+displayName="Natural Disasters Mod"
+description='''Adds 12 Natural Disasters and Disaster Stopper to Minecraft 1.21.1 NeoForge.'''
 
 [[dependencies.naturaldisasters]]
     modId="neoforge"
     type="required"
-    versionRange="[26.3,)"
+    versionRange="[21.1,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.naturaldisasters]]
     modId="minecraft"
     type="required"
-    versionRange="[26.3,26.4)"
+    versionRange="[1.21.1,1.21.2)"
     ordering="NONE"
     side="BOTH"
