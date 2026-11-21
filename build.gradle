@@ -1,35 +1,57 @@
 plugins {
     id 'java-library'
-    id 'net.neoforged.moddev' version '2.0.+'
+    id 'net.neoforged.moddev' version '2.0.74'
 }
 
-version = mod_version
-group = mod_group_id
+version = '1.0.0'
+group = 'com.example.disasters'
+base.archivesName = 'naturaldisasters-neoforge-1.21.1'
 
-base {
-    archivesName = mod_id
-}
-
-repositories {
-    maven { url = 'https://maven.neoforged.net/releases' }
-    mavenCentral()
-}
-
-def neoConf = configurations.detachedConfiguration(dependencies.create("net.neoforged:neoforge:[26.3,26.4)"))
-neoConf.transitive = false
-def resolvedNeoVersion = neoConf.resolvedConfiguration.firstLevelModuleDependencies.first().moduleVersion
-
-java.toolchain.languageVersion = JavaLanguageVersion.of(25)
+java.toolchain.languageVersion = JavaLanguageVersion.of(21)
 
 neoForge {
-    version = resolvedNeoVersion
+    version = '21.1.119'
+
     runs {
         client { client() }
         server { server() }
     }
+
     mods {
-        "${mod_id}" {
+        naturaldisasters {
             sourceSet(sourceSets.main)
         }
     }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.encoding = 'UTF-8'
+}
+
+tasks.register('generateAssets') {
+    doLast {
+        def baseDir = file("$buildDir/generated/resources/assets/naturaldisasters")
+        new File(baseDir, "models/item").mkdirs()
+
+        def icons = [
+            meteor_caller: "fire_charge", earthquake_caller: "flint", acid_rain_caller: "slime_ball",
+            tornado_caller: "feather", landslide_caller: "clay_ball", nuke_caller: "tnt",
+            tsunami_caller: "water_bucket", volcano_caller: "magma_cream", sinkhole_caller: "ender_pearl",
+            lightning_caller: "blaze_rod", blizzard_caller: "snowball", zombie_caller: "rotten_flesh",
+            disaster_stopper: "barrier"
+        ]
+        icons.each { id, tex ->
+            if (id == "nuke_caller") {
+                new File(baseDir, "models/item/${id}.json").setText("""{"parent":"minecraft:block/tnt"}""", 'UTF-8')
+            } else {
+                new File(baseDir, "models/item/${id}.json").setText("""{"parent":"minecraft:item/generated","textures":{"layer0":"minecraft:item/${tex}"}}""", 'UTF-8')
+            }
+        }
+    }
+}
+
+sourceSets.main.resources.srcDir "$buildDir/generated/resources"
+processResources {
+    dependsOn('generateAssets')
+    duplicatesStrategy = DuplicatesStrategy.INCLUDE
 }
