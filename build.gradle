@@ -28,9 +28,12 @@ tasks.withType(JavaCompile).configureEach {
     options.encoding = 'UTF-8'
 }
 
+def generatedResourcesDir = layout.buildDirectory.dir("generated/resources")
+
 tasks.register('generateAssets') {
+    outputs.dir(generatedResourcesDir)
     doLast {
-        def baseDir = file("$buildDir/generated/resources/assets/naturaldisasters")
+        def baseDir = new File(generatedResourcesDir.get().asFile, "assets/naturaldisasters")
         new File(baseDir, "items").mkdirs()
         new File(baseDir, "models/item").mkdirs()
 
@@ -42,8 +45,9 @@ tasks.register('generateAssets') {
             disaster_stopper: "barrier"
         ]
         icons.each { id, tex ->
-            if (id == "nuke_caller") {
-                new File(baseDir, "items/${id}.json").setText("""{"model":{"type":"minecraft:model","model":"minecraft:block/tnt"}}""", 'UTF-8')
+            if (id == "nuke_caller" || id == "disaster_stopper") {
+                String blockModel = (id == "nuke_caller") ? "minecraft:block/tnt" : "minecraft:item/barrier"
+                new File(baseDir, "items/${id}.json").setText("""{"model":{"type":"minecraft:model","model":"${blockModel}"}}""", 'UTF-8')
             } else {
                 new File(baseDir, "items/${id}.json").setText("""{"model":{"type":"minecraft:model","model":"naturaldisasters:item/${id}"}}""", 'UTF-8')
                 new File(baseDir, "models/item/${id}.json").setText("""{"parent":"minecraft:item/generated","textures":{"layer0":"minecraft:item/${tex}"}}""", 'UTF-8')
@@ -52,7 +56,7 @@ tasks.register('generateAssets') {
     }
 }
 
-sourceSets.main.resources.srcDir "$buildDir/generated/resources"
+sourceSets.main.resources.srcDir(generatedResourcesDir)
 processResources {
     dependsOn('generateAssets')
     duplicatesStrategy = DuplicatesStrategy.INCLUDE
