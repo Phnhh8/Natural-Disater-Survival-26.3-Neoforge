@@ -6,11 +6,8 @@ import net.minecraft.core.BlockPos;
 import net.minecraft.core.particles.ParticleTypes;
 import net.minecraft.core.registries.Registries;
 import net.minecraft.network.chat.Component;
-import net.minecraft.resources.Identifier;
-import net.minecraft.resources.ResourceKey;
 import net.minecraft.server.level.ServerLevel;
 import net.minecraft.server.level.ServerPlayer;
-import net.minecraft.server.permissions.Permissions;
 import net.minecraft.sounds.SoundEvents;
 import net.minecraft.sounds.SoundSource;
 import net.minecraft.world.InteractionHand;
@@ -31,7 +28,6 @@ import net.minecraft.world.level.block.state.BlockState;
 import net.minecraft.world.phys.AABB;
 import net.minecraft.world.phys.Vec3;
 import net.neoforged.bus.api.IEventBus;
-import net.neoforged.bus.api.SubscribeEvent;
 import net.neoforged.fml.common.Mod;
 import net.neoforged.neoforge.common.NeoForge;
 import net.neoforged.neoforge.event.RegisterCommandsEvent;
@@ -68,58 +64,55 @@ public class NaturalDisastersMod {
     public static final DeferredItem<Item> DISASTER_STOPPER = reg("disaster_stopper", "STOP", "Dừng Toàn Bộ Thảm Họa");
 
     private static DeferredItem<Item> reg(String name, String type, String displayName) {
-        ResourceKey<Item> key = ResourceKey.create(Registries.ITEM, Identifier.fromNamespaceAndPath(MODID, name));
-        return ITEMS.register(name, () -> new DisasterItem(new Item.Properties().setId(key).stacksTo(1), type, displayName));
+        return ITEMS.registerItem(name, props -> new DisasterItem(props.stacksTo(1), type, displayName));
     }
 
-    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> DISASTER_TAB = TABS.register("disaster_tab",
-        () -> CreativeModeTab.builder().title(Component.literal("Thảm Họa Thiên Nhiên")).icon(() -> new ItemStack(NUKE_CALLER.get()))
-            .displayItems((p, out) -> {
-                out.accept(METEOR_CALLER.get()); out.accept(EARTHQUAKE_CALLER.get()); out.accept(ACID_RAIN_CALLER.get());
-                out.accept(TORNADO_CALLER.get()); out.accept(LANDSLIDE_CALLER.get()); out.accept(NUKE_CALLER.get());
-                out.accept(TSUNAMI_CALLER.get()); out.accept(VOLCANO_CALLER.get()); out.accept(SINKHOLE_CALLER.get());
-                out.accept(LIGHTNING_CALLER.get()); out.accept(BLIZZARD_CALLER.get()); out.accept(ZOMBIE_CALLER.get());
-                out.accept(DISASTER_STOPPER.get());
-            }).build()
+    public static final DeferredHolder<CreativeModeTab, CreativeModeTab> DISASTER_TAB = TABS.register("disaster_tab", () -> CreativeModeTab.builder()
+        .title(Component.literal("Thảm Họa Thiên Nhiên"))
+        .icon(() -> new ItemStack(NUKE_CALLER.get()))
+        .displayItems((p, out) -> {
+            out.accept(METEOR_CALLER.get()); out.accept(EARTHQUAKE_CALLER.get()); out.accept(ACID_RAIN_CALLER.get());
+            out.accept(TORNADO_CALLER.get()); out.accept(LANDSLIDE_CALLER.get()); out.accept(NUKE_CALLER.get());
+            out.accept(TSUNAMI_CALLER.get()); out.accept(VOLCANO_CALLER.get()); out.accept(SINKHOLE_CALLER.get());
+            out.accept(LIGHTNING_CALLER.get()); out.accept(BLIZZARD_CALLER.get()); out.accept(ZOMBIE_CALLER.get());
+            out.accept(DISASTER_STOPPER.get());
+        }).build()
     );
+
     public NaturalDisastersMod(IEventBus modEventBus) {
         ITEMS.register(modEventBus);
         TABS.register(modEventBus);
-        NeoForge.EVENT_BUS.register(this);
-    }
 
-    @SubscribeEvent
-    public void onRegisterCommands(RegisterCommandsEvent event) {
-        event.getDispatcher().register(Commands.literal("disaster").requires(s -> s.permissions().hasPermission(Permissions.COMMANDS_GAMEMASTER))
-            .then(Commands.argument("type", StringArgumentType.word()).executes(ctx -> {
-                startDisaster(ctx.getSource().getLevel(), StringArgumentType.getString(ctx, "type").toUpperCase(), BlockPos.containing(ctx.getSource().getPosition()));
-                return 1;
-            })));
-    }
+        NeoForge.EVENT_BUS.addListener((RegisterCommandsEvent event) -> {
+            event.getDispatcher().register(Commands.literal("disaster").requires(Commands.hasPermission(Commands.LEVEL_GAMEMASTERS))
+                .then(Commands.argument("type", StringArgumentType.word()).executes(ctx -> {
+                    startDisaster(ctx.getSource().getLevel(), StringArgumentType.getString(ctx, "type").toUpperCase(), BlockPos.containing(ctx.getSource().getPosition()));
+                    return 1;
+                })));
+        });
 
-    @SubscribeEvent
-    public void onLevelTick(LevelTickEvent.Post event) {
-        if (!(event.getLevel() instanceof ServerLevel level) || level.players().isEmpty()) return;
-        if (++tickCounter >= 6000) {
-            tickCounter = 0;
-            String[] list = {"METEOR", "EARTHQUAKE", "ACID_RAIN", "TORNADO", "LANDSLIDE", "NUKE", "TSUNAMI", "VOLCANO", "SINKHOLE", "LIGHTNING_STORM", "BLIZZARD", "ZOMBIE_APOCALYPSE"};
-            ServerPlayer rp = level.players().get(RANDOM.nextInt(level.players().size()));
-            startDisaster(level, list[RANDOM.nextInt(list.length)], rp.blockPosition());
-        }
-        if (disasterDuration > 0) {
-            disasterDuration--;
-            switch (activeDisaster) {
-                case "TORNADO" -> { if (tornadoPos != null) runTornado(level); }
-                case "NUKE" -> { if (targetPos != null) runNuke(level); }
-                case "TSUNAMI" -> { if (targetPos != null) runTsunami(level); }
-                case "VOLCANO" -> { if (targetPos != null) runVolcano(level); }
-                case "SINKHOLE" -> { if (targetPos != null) runSinkhole(level); }
-                default -> { for (ServerPlayer p : level.players()) runPlayerDisaster(level, p); }
+        NeoForge.EVENT_BUS.addListener((LevelTickEvent.Post event) -> {
+            if (!(event.getLevel() instanceof ServerLevel level) || level.players().isEmpty()) return;
+            if (++tickCounter >= 6000) {
+                tickCounter = 0;
+                String[] list = {"METEOR", "EARTHQUAKE", "ACID_RAIN", "TORNADO", "LANDSLIDE", "NUKE", "TSUNAMI", "VOLCANO", "SINKHOLE", "LIGHTNING_STORM", "BLIZZARD", "ZOMBIE_APOCALYPSE"};
+                ServerPlayer rp = level.players().get(RANDOM.nextInt(level.players().size()));
+                startDisaster(level, list[RANDOM.nextInt(list.length)], rp.blockPosition());
             }
-            if (disasterDuration == 0) { activeDisaster = "NONE"; tornadoPos = null; targetPos = null; }
-        }
+            if (disasterDuration > 0) {
+                disasterDuration--;
+                switch (activeDisaster) {
+                    case "TORNADO" -> { if (tornadoPos != null) runTornado(level); }
+                    case "NUKE" -> { if (targetPos != null) runNuke(level); }
+                    case "TSUNAMI" -> { if (targetPos != null) runTsunami(level); }
+                    case "VOLCANO" -> { if (targetPos != null) runVolcano(level); }
+                    case "SINKHOLE" -> { if (targetPos != null) runSinkhole(level); }
+                    default -> { for (ServerPlayer p : level.players()) runPlayerDisaster(level, p); }
+                }
+                if (disasterDuration == 0) { activeDisaster = "NONE"; tornadoPos = null; targetPos = null; }
+            }
+        });
     }
-
     public static class DisasterItem extends Item {
         private final String type;
         private final String displayName;
@@ -131,7 +124,7 @@ public class NaturalDisastersMod {
             if (!level.isClientSide() && level instanceof ServerLevel sl) {
                 if (type.equals("STOP")) {
                     activeDisaster = "NONE"; disasterDuration = 0; tornadoPos = null; targetPos = null;
-                    player.displayClientMessage(Component.literal("§a[HỆ THỐNG] §fĐã dừng toàn bộ thảm họa!"), false);
+                    player.sendSystemMessage(Component.literal("§a[HỆ THỐNG] §fĐã dừng toàn bộ thảm họa!"));
                 } else startDisaster(sl, type, player.blockPosition());
                 player.getCooldowns().addCooldown(this.getDefaultInstance(), 40);
             }
@@ -148,7 +141,7 @@ public class NaturalDisastersMod {
         else if (type.equals("VOLCANO")) targetPos = pos.offset(24, 0, 24);
         else if (type.equals("SINKHOLE")) targetPos = pos;
         else if (type.equals("ZOMBIE_APOCALYPSE")) cmd(level, "time set midnight");
-        for (ServerPlayer p : level.players()) p.displayClientMessage(Component.literal("§c[CẢNH BÁO] §eThiên tai: §l" + type), false);
+        for (ServerPlayer p : level.players()) p.sendSystemMessage(Component.literal("§c[CẢNH BÁO] §eThiên tai: §l" + type));
     }
 
     private static void cmd(ServerLevel l, String c) {
@@ -177,7 +170,8 @@ public class NaturalDisastersMod {
                     if (x * x + z * z <= r * r) {
                         BlockPos bp = targetPos.offset(x, h, z);
                         boolean isCore = (x * x + z * z <= 12 && h > 8);
-                        level.setBlockAndUpdate(bp, isCore ? Blocks.LAVA.defaultBlockState() : (RANDOM.nextBoolean() ? Blocks.BASALT.defaultBlockState() : Blocks.OBSIDIAN.defaultBlockState()));
+                        BlockState state = isCore ? Blocks.LAVA.defaultBlockState() : (RANDOM.nextBoolean() ? Blocks.BASALT.defaultBlockState() : Blocks.OBSIDIAN.defaultBlockState());
+                        level.setBlockAndUpdate(bp, state);
                     }
                 }
             }
@@ -211,6 +205,7 @@ public class NaturalDisastersMod {
             }
         }
     }
+
     private static void runSinkhole(ServerLevel level) {
         if (disasterDuration % 3 == 0) {
             int depth = (120 - disasterDuration) / 3;
@@ -225,7 +220,6 @@ public class NaturalDisastersMod {
             }
         }
     }
-
     private static void runTornado(ServerLevel level) {
         Vec3 dir = level.players().get(0).position().subtract(tornadoPos).normalize();
         tornadoPos = tornadoPos.add(dir.x * 0.25, 0, dir.z * 0.25);
@@ -238,7 +232,7 @@ public class NaturalDisastersMod {
         }
         for (Entity e : level.getEntities(null, new AABB(tornadoPos.x - 18, tornadoPos.y - 5, tornadoPos.z - 18, tornadoPos.x + 18, tornadoPos.y + 35, tornadoPos.z + 18))) {
             double dx = tornadoPos.x - e.getX(), dz = tornadoPos.z - e.getZ();
-            e.setDeltaMovement(new Vec3(dx * 0.08 - dz * 0.12, 0.35, dz * 0.08 + dx * 0.12)); e.needsSync = true;
+            e.setDeltaMovement(new Vec3(dx * 0.08 - dz * 0.12, 0.35, dz * 0.08 + dx * 0.12)); e.hurtMarked = true;
         }
     }
 
@@ -246,7 +240,7 @@ public class NaturalDisastersMod {
         if (disasterDuration > 100) {
             if (disasterDuration % 20 == 0) {
                 for (ServerPlayer p : level.players()) {
-                    p.displayClientMessage(Component.literal("§4§l[HẠT NHÂN] §eNổ sau: §c" + ((disasterDuration - 100) / 20) + "s"), false);
+                    p.sendSystemMessage(Component.literal("§4§l[HẠT NHÂN] §eNổ sau: §c" + ((disasterDuration - 100) / 20) + "s"));
                     level.playSound(null, p.blockPosition(), SoundEvents.NOTE_BLOCK_BELL.value(), SoundSource.MASTER, 1f, 0.5f);
                 }
             }
@@ -272,7 +266,7 @@ public class NaturalDisastersMod {
                 }
             }
             case "EARTHQUAKE" -> {
-                p.setDeltaMovement(p.getDeltaMovement().add((RANDOM.nextDouble() - 0.5) * 0.4, 0.15, (RANDOM.nextDouble() - 0.5) * 0.4)); p.needsSync = true;
+                p.setDeltaMovement(p.getDeltaMovement().add((RANDOM.nextDouble() - 0.5) * 0.4, 0.15, (RANDOM.nextDouble() - 0.5) * 0.4)); p.hurtMarked = true;
                 if (disasterDuration % 5 == 0) {
                     BlockPos cp = pos.offset(RANDOM.nextInt(12) - 6, -1, RANDOM.nextInt(12) - 6);
                     if (!level.getBlockState(cp).isAir() && level.getBlockState(cp).getDestroySpeed(level, cp) >= 0) level.destroyBlock(cp, false);
