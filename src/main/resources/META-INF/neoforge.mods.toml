@@ -7,18 +7,18 @@ modId="naturaldisasters"
 version="1.0.0"
 displayName="Natural Disasters"
 authors="Phnhh_8"
-description='''Mod tham hoa thien nhien cho Minecraft NeoForge 26.2'''
+description='''Mod tham hoa thien nhien cho Minecraft NeoForge 26.1'''
 
 [[dependencies.naturaldisasters]]
     modId="neoforge"
     type="required"
-    versionRange="[26.2,)"
+    versionRange="[26.1,)"
     ordering="NONE"
     side="BOTH"
 
 [[dependencies.naturaldisasters]]
     modId="minecraft"
     type="required"
-    versionRange="[26.2,26.3)"
+    versionRange="[26.1,26.2)"
     ordering="NONE"
     side="BOTH"
